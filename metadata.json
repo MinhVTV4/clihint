@@ -1,0 +1,5 @@
+{
+  "name": "Remix: HintShell Academy",
+  "description": "A web-based terminal emulator with real-time command suggestions and interactive missions to learn CLI commands.",
+  "requestFramePermissions": []
+}

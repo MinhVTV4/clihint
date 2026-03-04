@@ -221,7 +221,7 @@ export const TerminalApp = () => {
       </div>
 
       {/* Right Panel: Terminal */}
-      <div className="flex-1 bg-[#050505] border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col relative">
+      <div className="flex-1 bg-[#050505] border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col relative min-h-[500px] lg:min-h-0">
         {/* Terminal Header */}
         <div className="h-10 bg-[#141414] border-b border-white/10 flex items-center px-4 justify-between">
           <div className="flex gap-1.5">
@@ -356,8 +356,8 @@ export const TerminalApp = () => {
       
       {/* Right Panel: Command Reference */}
       <div className={cn(
-        "flex-shrink-0 flex flex-col transition-all duration-300",
-        isFullscreen ? "w-0 opacity-0 overflow-hidden lg:w-0" : "hidden lg:flex w-full lg:w-80 opacity-100"
+        "flex-shrink-0 flex flex-col transition-all duration-300 min-h-[400px] lg:min-h-0",
+        isFullscreen ? "w-0 opacity-0 overflow-hidden lg:w-0" : "flex w-full lg:w-80 opacity-100"
       )}>
         <CommandReference />
       </div>

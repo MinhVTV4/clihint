@@ -7,6 +7,7 @@ import { twMerge } from 'tailwind-merge';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { FileExplorer } from './FileExplorer';
 import { CommandReference } from './CommandReference';
+import { Difficulty } from '../core/types';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -56,6 +57,29 @@ export const TerminalApp = () => {
     onKeyDown({ key: 'Enter', preventDefault: () => {} } as any);
   };
 
+  const difficultyLabels: Record<Difficulty, string> = {
+    beginner: 'Dễ (Beginner)',
+    intermediate: 'Trung bình (Intermediate)',
+    advanced: 'Khó (Advanced)',
+    sandbox: 'Tự do (Sandbox)'
+  };
+
+  const difficultyColors: Record<Difficulty, string> = {
+    beginner: 'text-green-400',
+    intermediate: 'text-yellow-400',
+    advanced: 'text-red-400',
+    sandbox: 'text-purple-400'
+  };
+
+  const difficultyOrder: Difficulty[] = ['beginner', 'intermediate', 'advanced', 'sandbox'];
+
+  const groupedCourses = difficultyOrder.map(diff => {
+    return {
+      difficulty: diff,
+      items: courses.map((course, idx) => ({ course, idx })).filter(item => item.course.difficulty === diff)
+    };
+  }).filter(group => group.items.length > 0);
+
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -101,24 +125,31 @@ export const TerminalApp = () => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-16 left-0 w-full bg-[#1A1B1E] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
+                className="absolute top-16 left-0 w-full bg-[#1A1B1E] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-[60vh] overflow-y-auto"
               >
-                {courses.map((course, idx) => (
-                  <div
-                    key={course.id}
-                    className={cn(
-                      "p-4 cursor-pointer hover:bg-white/5 transition-colors border-l-2",
-                      idx === currentCourseIndex ? "border-emerald-500 bg-emerald-500/10" : "border-transparent"
-                    )}
-                    onClick={() => {
-                      changeCourse(idx);
-                      setIsCourseMenuOpen(false);
-                    }}
-                  >
-                    <h4 className={cn("font-medium text-sm mb-1", idx === currentCourseIndex ? "text-emerald-400" : "text-gray-200")}>
-                      {course.title}
-                    </h4>
-                    <p className="text-xs text-gray-500 line-clamp-2">{course.description}</p>
+                {groupedCourses.map(group => (
+                  <div key={group.difficulty} className="mb-2 last:mb-0">
+                    <div className={cn("px-4 py-2 text-[10px] uppercase tracking-wider font-bold bg-white/5", difficultyColors[group.difficulty])}>
+                      {difficultyLabels[group.difficulty]}
+                    </div>
+                    {group.items.map(({ course, idx }) => (
+                      <div
+                        key={course.id}
+                        className={cn(
+                          "p-4 cursor-pointer hover:bg-white/5 transition-colors border-l-2",
+                          idx === currentCourseIndex ? "border-emerald-500 bg-emerald-500/10" : "border-transparent"
+                        )}
+                        onClick={() => {
+                          changeCourse(idx);
+                          setIsCourseMenuOpen(false);
+                        }}
+                      >
+                        <h4 className={cn("font-medium text-sm mb-1", idx === currentCourseIndex ? "text-emerald-400" : "text-gray-200")}>
+                          {course.title}
+                        </h4>
+                        <p className="text-xs text-gray-500 line-clamp-2">{course.description}</p>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </motion.div>

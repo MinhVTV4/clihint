@@ -5,6 +5,7 @@ export const networkingBasics: Course = {
   id: "networking-basics",
   title: "Mạng máy tính Cơ bản",
   description: "Làm quen với các lệnh kiểm tra mạng và tải dữ liệu từ internet.",
+  difficulty: "intermediate",
   prerequisites: ["linux-basics"],
   missions: [
     {

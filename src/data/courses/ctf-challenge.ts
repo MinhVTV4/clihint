@@ -5,6 +5,7 @@ export const ctfChallenge: Course = {
   id: "ctf-challenge",
   title: "CTF: Thử thách Hacker",
   description: "Chế độ Thử thách (Escape Room) với nhiều cấp độ từ dễ đến khó. Bạn phải tự vận dụng mọi kiến thức đã học để giải quyết các vấn đề do hacker gây ra.",
+  difficulty: "advanced",
   prerequisites: ["process-management"],
   missions: [
     {

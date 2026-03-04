@@ -9,6 +9,7 @@ import { networkingBasics } from './courses/networking-basics';
 import { packageManagement } from './courses/package-management';
 import { ctfChallenge } from './courses/ctf-challenge';
 import { sandboxMode } from './courses/sandbox';
+import { npmBasics } from './courses/npm-basics';
 
 export const courses: Course[] = [
   sandboxMode,
@@ -19,6 +20,7 @@ export const courses: Course[] = [
   processManagement,
   networkingBasics,
   packageManagement,
+  npmBasics,
   gitMastery,
   ctfChallenge
 ];

@@ -4,6 +4,7 @@ export const packageManagement: Course = {
   id: "package-management",
   title: "Quản lý Gói phần mềm",
   description: "Học cách cài đặt và cập nhật các phần mềm trên hệ thống Linux bằng lệnh apt.",
+  difficulty: "intermediate",
   prerequisites: ["linux-basics"],
   missions: [
     {

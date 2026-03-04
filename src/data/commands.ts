@@ -101,7 +101,10 @@ export const commands: CommandDefinition[] = [
   },
   {
     name: "ping",
-    description: "Kiểm tra kết nối mạng đến một địa chỉ IP hoặc tên miền"
+    description: "Kiểm tra kết nối mạng đến một địa chỉ IP hoặc tên miền. Có thể thêm tùy chọn timeout (mặc định 5 giây nếu không cung cấp).",
+    options: [
+      { name: "-w", description: "Thời gian chờ tối đa (timeout) tính bằng giây" }
+    ]
   },
   {
     name: "curl",
@@ -154,6 +157,48 @@ export const commands: CommandDefinition[] = [
     description: "Xem nội dung file từng trang một"
   },
   {
+    name: "whoami",
+    description: "Hiển thị tên người dùng hiện tại"
+  },
+  {
+    name: "date",
+    description: "Hiển thị ngày giờ hệ thống"
+  },
+  {
+    name: "uptime",
+    description: "Hiển thị thời gian hệ thống đã hoạt động"
+  },
+  {
+    name: "uname",
+    description: "Hiển thị thông tin hệ điều hành",
+    options: [
+      { name: "-a", description: "Hiển thị tất cả thông tin chi tiết" }
+    ]
+  },
+  {
+    name: "wc",
+    description: "Đếm số dòng, số từ và số byte của file",
+    options: [
+      { name: "-l", description: "Chỉ đếm số dòng" },
+      { name: "-w", description: "Chỉ đếm số từ" },
+      { name: "-c", description: "Chỉ đếm số byte" }
+    ]
+  },
+  {
+    name: "df",
+    description: "Hiển thị dung lượng đĩa trống trên các phân vùng hệ thống",
+    options: [
+      { name: "-h", description: "Hiển thị dung lượng dễ đọc (Human-readable)" }
+    ]
+  },
+  {
+    name: "free",
+    description: "Hiển thị dung lượng RAM trống và đã sử dụng",
+    options: [
+      { name: "-h", description: "Hiển thị dung lượng dễ đọc (Human-readable)" }
+    ]
+  },
+  {
     name: "git",
     description: "Công cụ quản lý phiên bản mã nguồn",
     subcommands: [
@@ -167,6 +212,16 @@ export const commands: CommandDefinition[] = [
       { name: "push", description: "Đẩy code lên remote repository" },
       { name: "pull", description: "Lấy code mới nhất từ remote về" },
       { name: "clone", description: "Tải một repository từ internet về máy" }
+    ]
+  },
+  {
+    name: "npm",
+    description: "Trình quản lý gói cho Node.js",
+    subcommands: [
+      { name: "init", description: "Khởi tạo một dự án Node.js mới (tạo package.json)", options: [{ name: "-y", description: "Bỏ qua các câu hỏi và dùng giá trị mặc định" }] },
+      { name: "install", description: "Cài đặt các gói phụ thuộc (hoặc dùng 'i')" },
+      { name: "start", description: "Chạy script 'start' trong package.json" },
+      { name: "run", description: "Chạy một script được định nghĩa trong package.json" }
     ]
   }
 ];

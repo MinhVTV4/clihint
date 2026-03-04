@@ -4,6 +4,7 @@ export const sandboxMode: Course = {
   id: "sandbox",
   title: "Sandbox (Chế độ Tự do)",
   description: "Khu vực thử nghiệm tự do. Không có nhiệm vụ, không có ràng buộc. Bạn có toàn quyền sử dụng hệ thống file ảo này để thử nghiệm mọi lệnh đã học.",
+  difficulty: "sandbox",
   prerequisites: [],
   missions: [
     {

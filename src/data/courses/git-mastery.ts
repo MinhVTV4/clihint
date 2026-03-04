@@ -5,6 +5,7 @@ export const gitMastery: Course = {
   id: "git-mastery",
   title: "Git Thực chiến",
   description: "Mô phỏng lại quy trình làm việc cơ bản với Git.",
+  difficulty: "advanced",
   prerequisites: ["advanced-file-management"],
   missions: [
     {

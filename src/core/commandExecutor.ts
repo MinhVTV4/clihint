@@ -607,12 +607,100 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       break;
     }
     
+    case 'whoami': {
+      output = clonedVfs.currentUser || 'user';
+      break;
+    }
+
+    case 'date': {
+      output = new Date().toString();
+      break;
+    }
+
+    case 'uptime': {
+      output = ` 10:00:00 up 1 day,  2:34,  1 user,  load average: 0.00, 0.01, 0.05`;
+      break;
+    }
+
+    case 'uname': {
+      const isAll = args.includes('-a');
+      if (isAll) {
+        output = `Linux virtual-machine 5.15.0-generic #1 SMP Tue Mar 4 10:00:00 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux`;
+      } else {
+        output = `Linux`;
+      }
+      break;
+    }
+
+    case 'wc': {
+      const fileArg = args.find(a => !a.startsWith('-') && a !== 'wc');
+      if (!fileArg) {
+        output = 'wc: missing operand';
+        break;
+      }
+      
+      const targetPath = resolvePath(vfs.cwd, fileArg);
+      const node = getNodeAtPath(clonedVfs.root, targetPath);
+      
+      if (!node) {
+        output = `wc: ${fileArg}: No such file or directory`;
+      } else if (node.type === 'dir') {
+        output = `wc: ${fileArg}: Is a directory\n      0       0       0 ${fileArg}`;
+      } else {
+        const lines = node.content.split('\n').length;
+        const words = node.content.split(/\s+/).filter(w => w.length > 0).length;
+        const bytes = node.content.length;
+        
+        const options = args.filter(a => a.startsWith('-'));
+        let res = [];
+        if (options.length === 0) {
+           res = [lines, words, bytes];
+        } else {
+           if (options.some(o => o.includes('l'))) res.push(lines);
+           if (options.some(o => o.includes('w'))) res.push(words);
+           if (options.some(o => o.includes('c'))) res.push(bytes);
+        }
+        output = ` ${res.join(' ')} ${fileArg}`;
+      }
+      break;
+    }
+
+    case 'df': {
+      const isHuman = args.includes('-h');
+      if (isHuman) {
+        output = `Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        20G  5.0G   15G  25% /\ntmpfs           500M     0  500M   0% /dev/shm`;
+      } else {
+        output = `Filesystem     1K-blocks    Used Available Use% Mounted on\n/dev/sda1       20480000 5120000  15360000  25% /\ntmpfs             512000       0    512000   0% /dev/shm`;
+      }
+      break;
+    }
+
+    case 'free': {
+      const isHuman = args.includes('-h');
+      if (isHuman) {
+        output = `               total        used        free      shared  buff/cache   available\nMem:           8.0G        2.5G        3.0G        100M        2.5G        5.0G\nSwap:          2.0G          0B        2.0G`;
+      } else {
+        output = `               total        used        free      shared  buff/cache   available\nMem:         8192000     2560000     3072000      102400     2560000     5120000\nSwap:        2097152           0     2097152`;
+      }
+      break;
+    }
+    
       case 'ping': {
-      if (!args[1]) {
+      let target = args[1];
+      let timeout = 5; // Default timeout
+
+      if (args[1] === '-w' && args[2]) {
+        timeout = parseInt(args[2], 10);
+        target = args[3];
+      } else if (args[2] === '-w' && args[3]) {
+        timeout = parseInt(args[3], 10);
+      }
+
+      if (!target) {
         output = 'ping: usage error: Destination address required';
         break;
       }
-      output = `PING ${args[1]} (192.168.1.1): 56 data bytes\n64 bytes from 192.168.1.1: icmp_seq=0 ttl=64 time=1.234 ms\n64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=1.102 ms\n64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=1.123 ms\n--- ${args[1]} ping statistics ---\n3 packets transmitted, 3 packets received, 0.0% packet loss`;
+      output = `PING ${target} (192.168.1.1): 56 data bytes\n64 bytes from 192.168.1.1: icmp_seq=0 ttl=64 time=1.234 ms\n64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=1.102 ms\n64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=1.123 ms\n--- ${target} ping statistics ---\n3 packets transmitted, 3 packets received, 0.0% packet loss\n(Timeout set to ${timeout} seconds)`;
       break;
     }
 
@@ -716,6 +804,157 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
         }
       } else {
         output = `Thực thi lệnh git: ${args.slice(1).join(' ')}`;
+      }
+      break;
+    }
+
+    case 'npm': {
+      const cwdNode = getNodeAtPath(clonedVfs.root, vfs.cwd);
+      if (!cwdNode || cwdNode.type !== 'dir') {
+        output = 'npm: error: current directory not found';
+        break;
+      }
+
+      const subcommand = args[1];
+
+      if (!subcommand) {
+        output = `
+npm <command>
+
+Usage:
+
+npm install        install all the dependencies in your project
+npm install <foo>  add the <foo> dependency to your project
+npm test           run this project's tests
+npm run <foo>      run the script named <foo>
+npm <command> -h   quick help on <command>
+`;
+        break;
+      }
+
+      if (subcommand === 'init') {
+        const isYes = args.includes('-y');
+        if (cwdNode.children['package.json']) {
+          output = 'npm ERR! package.json already exists';
+        } else {
+          const defaultPackageJson = {
+            name: vfs.cwd.split('/').pop() || 'my-project',
+            version: '1.0.0',
+            description: '',
+            main: 'index.js',
+            scripts: {
+              test: 'echo "Error: no test specified" && exit 1'
+            },
+            keywords: [],
+            author: '',
+            license: 'ISC'
+          };
+          cwdNode.children['package.json'] = {
+            type: 'file',
+            name: 'package.json',
+            content: JSON.stringify(defaultPackageJson, null, 2),
+            meta: createMetadata('file')
+          };
+          output = `Wrote to ${vfs.cwd}/package.json:\n\n${JSON.stringify(defaultPackageJson, null, 2)}`;
+        }
+      } else if (subcommand === 'install' || subcommand === 'i') {
+        const packages = args.slice(2).filter(a => !a.startsWith('-'));
+        
+        if (!cwdNode.children['package.json']) {
+          output = 'npm ERR! code ENOENT\nnpm ERR! syscall open\nnpm ERR! path ' + vfs.cwd + '/package.json\nnpm ERR! errno -2\nnpm ERR! enoent ENOENT: no such file or directory, open \'' + vfs.cwd + '/package.json\'';
+          break;
+        }
+
+        const packageJsonFile = cwdNode.children['package.json'];
+        if (packageJsonFile.type !== 'file') {
+          output = 'npm ERR! package.json is not a file';
+          break;
+        }
+
+        let packageJson;
+        try {
+          packageJson = JSON.parse(packageJsonFile.content);
+        } catch (e) {
+          output = 'npm ERR! Failed to parse package.json';
+          break;
+        }
+
+        if (!packageJson.dependencies) {
+          packageJson.dependencies = {};
+        }
+
+        if (packages.length > 0) {
+          packages.forEach(pkg => {
+            packageJson.dependencies[pkg] = '^1.0.0';
+          });
+          packageJsonFile.content = JSON.stringify(packageJson, null, 2);
+          
+          if (!cwdNode.children['node_modules']) {
+            cwdNode.children['node_modules'] = { type: 'dir', name: 'node_modules', children: {}, meta: createMetadata('dir') };
+          }
+          
+          const nodeModules = cwdNode.children['node_modules'];
+          if (nodeModules.type === 'dir') {
+            packages.forEach(pkg => {
+              nodeModules.children[pkg] = { type: 'dir', name: pkg, children: {}, meta: createMetadata('dir') };
+            });
+          }
+
+          output = `added ${packages.length} packages, and audited ${packages.length + 1} packages in 1s\n\nfound 0 vulnerabilities`;
+        } else {
+          const depsCount = Object.keys(packageJson.dependencies || {}).length;
+          if (!cwdNode.children['node_modules']) {
+            cwdNode.children['node_modules'] = { type: 'dir', name: 'node_modules', children: {}, meta: createMetadata('dir') };
+          }
+          output = `added ${depsCount} packages, and audited ${depsCount + 1} packages in 2s\n\nfound 0 vulnerabilities`;
+        }
+      } else if (subcommand === 'run') {
+        const scriptName = args[2];
+        if (!scriptName) {
+          output = 'npm ERR! missing script name';
+          break;
+        }
+
+        const packageJsonFile = cwdNode.children['package.json'];
+        if (!packageJsonFile || packageJsonFile.type !== 'file') {
+          output = 'npm ERR! missing package.json';
+          break;
+        }
+
+        let packageJson;
+        try {
+          packageJson = JSON.parse(packageJsonFile.content);
+        } catch (e) {
+          output = 'npm ERR! Failed to parse package.json';
+          break;
+        }
+
+        if (!packageJson.scripts || !packageJson.scripts[scriptName]) {
+          output = `npm ERR! missing script: ${scriptName}`;
+          break;
+        }
+
+        const scriptCmd = packageJson.scripts[scriptName];
+        output = `> ${packageJson.name}@${packageJson.version} ${scriptName}\n> ${scriptCmd}\n\n(Simulated execution of: ${scriptCmd})`;
+      } else if (subcommand === 'start') {
+        const packageJsonFile = cwdNode.children['package.json'];
+        if (!packageJsonFile || packageJsonFile.type !== 'file') {
+          output = 'npm ERR! missing package.json';
+          break;
+        }
+
+        let packageJson;
+        try {
+          packageJson = JSON.parse(packageJsonFile.content);
+        } catch (e) {
+          output = 'npm ERR! Failed to parse package.json';
+          break;
+        }
+
+        const scriptCmd = (packageJson.scripts && packageJson.scripts.start) ? packageJson.scripts.start : 'node server.js';
+        output = `> ${packageJson.name}@${packageJson.version} start\n> ${scriptCmd}\n\n(Simulated execution of: ${scriptCmd})`;
+      } else {
+        output = `npm ERR! Unknown command: "${subcommand}"`;
       }
       break;
     }

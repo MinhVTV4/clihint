@@ -4,6 +4,7 @@ export const processManagement: Course = {
   id: "process-management",
   title: "Quản lý Tiến trình",
   description: "Học cách xem, theo dõi và quản lý các tiến trình đang chạy trong hệ thống bằng ps, top và kill.",
+  difficulty: "intermediate",
   prerequisites: ["linux-basics"],
   missions: [
     {

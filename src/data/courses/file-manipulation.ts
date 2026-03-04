@@ -5,6 +5,7 @@ export const fileManipulation: Course = {
   id: "file-manipulation",
   title: "Thao tác Nội dung File",
   description: "Học cách xem, tìm kiếm và chỉnh sửa nội dung bên trong các file văn bản.",
+  difficulty: "beginner",
   prerequisites: ["bash-basics"],
   missions: [
     {

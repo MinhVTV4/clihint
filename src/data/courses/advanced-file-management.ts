@@ -5,6 +5,7 @@ export const advancedFileManagement: Course = {
   id: "advanced-file-management",
   title: "Quản lý File Nâng cao",
   description: "Hướng dẫn cách di chuyển, sao chép và đổi tên file/thư mục.",
+  difficulty: "intermediate",
   prerequisites: ["file-manipulation"],
   missions: [
     {

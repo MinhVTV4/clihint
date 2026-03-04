@@ -10,10 +10,13 @@ export interface Mission {
   validate: (vfs: VFSState, lastCommand: string) => boolean;
 }
 
+export type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'sandbox';
+
 export interface Course {
   id: string;
   title: string;
   description: string;
+  difficulty: Difficulty;
   prerequisites?: string[];
   missions: Mission[];
 }

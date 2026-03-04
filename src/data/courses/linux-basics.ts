@@ -5,6 +5,7 @@ export const linuxBasics: Course = {
   id: "linux-basics",
   title: "Linux/Bash Script Cơ bản",
   description: "Làm quen với các lệnh quản lý file, phân quyền và tìm kiếm trong Linux.",
+  difficulty: "beginner",
   prerequisites: [],
   missions: [
     {

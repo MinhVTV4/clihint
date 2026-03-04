@@ -24,9 +24,19 @@ export interface VFSDirectory {
 
 export type VFSNode = VFSFile | VFSDirectory;
 
+export interface Process {
+  pid: number;
+  user: string;
+  command: string;
+  cpu: number;
+  mem: number;
+  status: 'R' | 'S' | 'Z';
+}
+
 export interface VFSState {
   root: VFSDirectory;
   cwd: string; // Absolute path, e.g., '/home/user'
+  processes?: Process[];
 }
 
 export const createMetadata = (type: NodeType, permissions?: string): VFSMetadata => {
@@ -42,6 +52,10 @@ export const createMetadata = (type: NodeType, permissions?: string): VFSMetadat
 
 export const initialVFS: VFSState = {
   cwd: '/home/user',
+  processes: [
+    { pid: 1, user: 'root', command: '/sbin/init', cpu: 0.1, mem: 0.5, status: 'S' },
+    { pid: 42, user: 'user', command: 'bash', cpu: 0.0, mem: 0.2, status: 'S' },
+  ],
   root: {
     type: 'dir',
     name: '',

@@ -488,6 +488,78 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       break;
     }
 
+    case 'ps': {
+      const processes = clonedVfs.processes || [];
+      const showAll = args.includes('aux') || args.includes('-ef');
+      
+      let header = '  PID TTY          TIME CMD';
+      if (showAll) {
+        header = 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND';
+      }
+      
+      const psOutput = processes
+        .filter(p => showAll || p.user === 'user')
+        .map(p => {
+          if (showAll) {
+            return `${p.user.padEnd(8)} ${p.pid.toString().padStart(7)} ${p.cpu.toFixed(1).padStart(4)} ${p.mem.toFixed(1).padStart(4)}  12345  6789 pts/0    ${p.status.padEnd(4)} 00:00   0:00 ${p.command}`;
+          } else {
+            return `${p.pid.toString().padStart(5)} pts/0    00:00:00 ${p.command}`;
+          }
+        });
+        
+      output = [header, ...psOutput].join('\n');
+      break;
+    }
+
+    case 'kill': {
+      if (!args[1]) {
+        output = 'kill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]';
+        break;
+      }
+      
+      const targetPid = parseInt(args[args.length - 1], 10);
+      if (isNaN(targetPid)) {
+        output = `kill: ${args[args.length - 1]}: arguments must be process or job IDs`;
+        break;
+      }
+      
+      if (clonedVfs.processes) {
+        const initialLength = clonedVfs.processes.length;
+        clonedVfs.processes = clonedVfs.processes.filter(p => p.pid !== targetPid);
+        if (clonedVfs.processes.length === initialLength) {
+          output = `kill: (${targetPid}) - No such process`;
+        } else {
+          output = '';
+        }
+      } else {
+        output = `kill: (${targetPid}) - No such process`;
+      }
+      break;
+    }
+
+    case 'top': {
+      const processes = clonedVfs.processes || [];
+      const totalCpu = processes.reduce((acc, p) => acc + p.cpu, 0);
+      const totalMem = processes.reduce((acc, p) => acc + p.mem, 0);
+      
+      const header1 = `top - ${new Date().toLocaleTimeString()} up 1 day,  1:23,  1 user,  load average: 0.00, 0.01, 0.05`;
+      const header2 = `Tasks: ${processes.length} total,   1 running, ${processes.length - 1} sleeping,   0 stopped,   0 zombie`;
+      const header3 = `%Cpu(s):  ${totalCpu.toFixed(1)} us,  0.1 sy,  0.0 ni, ${(100 - totalCpu).toFixed(1)} id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st`;
+      const header4 = `MiB Mem :   8192.0 total,   4096.0 free,   ${(totalMem * 81.92).toFixed(1)} used,   4096.0 buff/cache`;
+      const header5 = `MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.   4096.0 avail Mem `;
+      const emptyLine = '';
+      const tableHeader = '  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND';
+      
+      const psOutput = processes
+        .sort((a, b) => b.cpu - a.cpu)
+        .map(p => {
+          return `${p.pid.toString().padStart(5)} ${p.user.padEnd(8)}  20   0   12345   6789   1234 ${p.status}  ${p.cpu.toFixed(1).padStart(4)}  ${p.mem.toFixed(1).padStart(4)}   0:00.00 ${p.command}`;
+        });
+        
+      output = [header1, header2, header3, header4, header5, emptyLine, tableHeader, ...psOutput].join('\n');
+      break;
+    }
+
     case 'less': {
       if (!args[1]) {
         output = 'missing filename';

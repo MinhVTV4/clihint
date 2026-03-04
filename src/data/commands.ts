@@ -100,6 +100,24 @@ export const commands: CommandDefinition[] = [
     ]
   },
   {
+    name: "ps",
+    description: "Xem danh sách các tiến trình đang chạy",
+    options: [
+      { name: "aux", description: "Xem tất cả tiến trình của mọi người dùng" }
+    ]
+  },
+  {
+    name: "kill",
+    description: "Gửi tín hiệu để tiêu diệt một tiến trình",
+    options: [
+      { name: "-9", description: "Tiêu diệt ngay lập tức (SIGKILL)" }
+    ]
+  },
+  {
+    name: "top",
+    description: "Theo dõi tài nguyên hệ thống và tiến trình theo thời gian thực"
+  },
+  {
     name: "chmod",
     description: "Thay đổi quyền truy cập của file/thư mục"
   },

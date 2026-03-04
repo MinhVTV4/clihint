@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { commands, CommandDefinition } from '../data/commands';
-import { Search, ChevronDown, ChevronRight, Terminal as TerminalIcon } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, Terminal as TerminalIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -113,8 +113,16 @@ export const CommandReference = () => {
             placeholder="Tìm kiếm lệnh..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-black/50 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+            className="w-full bg-black/50 border border-white/10 rounded-lg pl-9 pr-9 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
       

@@ -67,12 +67,12 @@ export const TerminalApp = () => {
   }, [currentMissionIndex, currentCourseIndex]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-gray-300 font-mono flex flex-col md:flex-row p-4 md:p-8 gap-6 transition-all duration-300">
+    <div className="min-h-screen bg-[#0A0A0A] text-gray-300 font-mono flex flex-col lg:flex-row p-4 md:p-8 gap-6 transition-all duration-300">
       
       {/* Left Panel: Missions */}
       <div className={cn(
         "flex-shrink-0 flex flex-col gap-4 transition-all duration-300",
-        isFullscreen ? "w-0 opacity-0 overflow-hidden md:w-0" : "w-full md:w-80 opacity-100"
+        isFullscreen ? "w-0 opacity-0 overflow-hidden lg:w-0" : "w-full lg:w-80 opacity-100"
       )}>
         <div className="bg-[#141414] border border-white/10 rounded-xl p-5 shadow-lg relative">
           

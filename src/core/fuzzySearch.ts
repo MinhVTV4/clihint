@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js';
 import { commands } from '../data/commands';
-import { VFSState, getNodeAtPath } from './vfs';
+import { VFSState, getNodeAtPath, resolvePath, VFSDirectory } from './vfs';
 
 export interface Suggestion {
   text: string;
@@ -53,7 +53,21 @@ export const getSuggestions = (input: string, vfs?: VFSState): Suggestion[] => {
 
     if ((isCd || isFileCmd) && parts.length >= 2) {
       const searchTerm = parts[parts.length - 1];
-      const currentNode = getNodeAtPath(vfs.root, vfs.cwd);
+      
+      // Resolve the directory to search in
+      let searchDir = vfs.cwd;
+      let filePrefix = '';
+      
+      if (searchTerm.includes('/')) {
+        const lastSlashIndex = searchTerm.lastIndexOf('/');
+        const dirPart = searchTerm.substring(0, lastSlashIndex);
+        filePrefix = searchTerm.substring(lastSlashIndex + 1);
+        searchDir = resolvePath(vfs.cwd, dirPart || '/');
+      } else {
+        filePrefix = searchTerm;
+      }
+
+      const currentNode = getNodeAtPath(vfs.root, searchDir);
       
       if (currentNode && currentNode.type === 'dir') {
         const children = Object.values(currentNode.children);
@@ -64,18 +78,17 @@ export const getSuggestions = (input: string, vfs?: VFSState): Suggestion[] => {
         }
 
         const prefix = parts.slice(0, -1).join(' ') + ' ';
+        const pathPrefix = searchTerm.includes('/') ? searchTerm.substring(0, searchTerm.lastIndexOf('/') + 1) : '';
         
-        const fileSuggestions: Suggestion[] = candidates.map(c => ({
-          text: prefix + c.name,
-          description: c.type === 'dir' ? 'Thư mục' : 'Tập tin',
-          type: c.type === 'dir' ? 'Thư mục' : 'File'
-        }));
+        const fileSuggestions: Suggestion[] = candidates
+          .filter(c => c.name.startsWith(filePrefix))
+          .map(c => ({
+            text: prefix + pathPrefix + c.name + (c.type === 'dir' ? '/' : ''),
+            description: c.type === 'dir' ? 'Thư mục' : 'Tập tin',
+            type: c.type === 'dir' ? 'Thư mục' : 'File'
+          }));
 
-        if (searchTerm) {
-          const fileFuse = new Fuse(fileSuggestions, { keys: ['text'], threshold: 0.4 });
-          const fileResults = fileFuse.search(input).map(r => r.item);
-          if (fileResults.length > 0) return fileResults.slice(0, 6);
-        } else {
+        if (fileSuggestions.length > 0) {
           return fileSuggestions.slice(0, 6);
         }
       }

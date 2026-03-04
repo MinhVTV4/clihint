@@ -1,5 +1,5 @@
 import { Course } from '../../core/types';
-import { getNodeAtPath } from '../../core/vfs';
+import { getNodeAtPath, createMetadata } from '../../core/vfs';
 
 export const fileManipulation: Course = {
   id: "file-manipulation",
@@ -17,7 +17,7 @@ export const fileManipulation: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['log.txt'] = { type: 'file', name: 'log.txt', content: 'System started\nUser logged in\nError: connection failed' };
+          home.children['log.txt'] = { type: 'file', name: 'log.txt', content: 'System started\nUser logged in\nError: connection failed', meta: createMetadata('file') };
         }
         newVfs.cwd = '/home/user';
         return newVfs;
@@ -56,7 +56,7 @@ export const fileManipulation: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['users.csv'] = { type: 'file', name: 'users.csv', content: 'id,name,role\n1,john,user\n2,admin,admin\n3,mary,user' };
+          home.children['users.csv'] = { type: 'file', name: 'users.csv', content: 'id,name,role\n1,john,user\n2,admin,admin\n3,mary,user', meta: createMetadata('file') };
         }
         return newVfs;
       },

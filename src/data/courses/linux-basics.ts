@@ -1,5 +1,5 @@
 import { Course } from '../../core/types';
-import { getNodeAtPath } from '../../core/vfs';
+import { getNodeAtPath, createMetadata } from '../../core/vfs';
 
 export const linuxBasics: Course = {
   id: "linux-basics",
@@ -17,7 +17,7 @@ export const linuxBasics: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['large_log.txt'] = { type: 'file', name: 'large_log.txt', content: 'Line 1\nLine 2\n...\nLine 1000' };
+          home.children['large_log.txt'] = { type: 'file', name: 'large_log.txt', content: 'Line 1\nLine 2\n...\nLine 1000', meta: createMetadata('file') };
         }
         newVfs.cwd = '/home/user';
         return newVfs;
@@ -38,8 +38,9 @@ export const linuxBasics: Course = {
             type: 'dir', 
             name: 'hidden_folder', 
             children: {
-              'secret.txt': { type: 'file', name: 'secret.txt', content: 'You found me!' }
-            }
+              'secret.txt': { type: 'file', name: 'secret.txt', content: 'You found me!', meta: createMetadata('file') }
+            },
+            meta: createMetadata('dir')
           };
         }
         return newVfs;
@@ -56,11 +57,14 @@ export const linuxBasics: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['script.sh'] = { type: 'file', name: 'script.sh', content: 'echo "Running script..."' };
+          home.children['script.sh'] = { type: 'file', name: 'script.sh', content: 'echo "Running script..."', meta: createMetadata('file') };
         }
         return newVfs;
       },
-      validate: (_, cmd) => cmd === 'chmod +x script.sh'
+      validate: (vfs) => {
+        const node = getNodeAtPath(vfs.root, '/home/user/script.sh');
+        return node !== null && node.type === 'file' && node.meta.permissions.includes('x');
+      }
     },
     {
       id: "l4",
@@ -72,11 +76,14 @@ export const linuxBasics: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['data.db'] = { type: 'file', name: 'data.db', content: 'binary data' };
+          home.children['data.db'] = { type: 'file', name: 'data.db', content: 'binary data', meta: createMetadata('file') };
         }
         return newVfs;
       },
-      validate: (_, cmd) => cmd === 'chown admin data.db'
+      validate: (vfs) => {
+        const node = getNodeAtPath(vfs.root, '/home/user/data.db');
+        return node !== null && node.type === 'file' && node.meta.owner === 'admin';
+      }
     },
     {
       id: "l5",

@@ -1,5 +1,5 @@
 import { Course } from '../../core/types';
-import { getNodeAtPath } from '../../core/vfs';
+import { getNodeAtPath, createMetadata } from '../../core/vfs';
 
 export const gitMastery: Course = {
   id: "git-mastery",
@@ -33,8 +33,8 @@ export const gitMastery: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['index.html'] = { type: 'file', name: 'index.html', content: '<h1>Hello</h1>' };
-          home.children['style.css'] = { type: 'file', name: 'style.css', content: 'body { color: red; }' };
+          home.children['index.html'] = { type: 'file', name: 'index.html', content: '<h1>Hello</h1>', meta: createMetadata('file') };
+          home.children['style.css'] = { type: 'file', name: 'style.css', content: 'body { color: red; }', meta: createMetadata('file') };
         }
         return newVfs;
       },

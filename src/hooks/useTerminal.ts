@@ -158,7 +158,20 @@ export const useTerminal = () => {
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.ctrlKey && e.key === 'l') {
+      e.preventDefault();
+      handleCommand('clear');
+    } else if (e.ctrlKey && e.key === 'c') {
+      e.preventDefault();
+      setLines(prev => [
+        ...prev,
+        { id: Date.now().toString(), type: 'input', content: input + '^C' }
+      ]);
+      setInput('');
+      setHistoryIndex(-1);
+      setIsBrowsingHistory(false);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
       handleCommand(input);
     } else if (e.key === 'Tab') {
       e.preventDefault();

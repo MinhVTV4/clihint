@@ -1,15 +1,25 @@
 export type NodeType = 'file' | 'dir';
 
+export interface VFSMetadata {
+  permissions: string; // e.g., 'rwxr-xr-x'
+  owner: string;
+  group: string;
+  createdAt: number;
+  modifiedAt: number;
+}
+
 export interface VFSFile {
   type: 'file';
   name: string;
   content: string;
+  meta: VFSMetadata;
 }
 
 export interface VFSDirectory {
   type: 'dir';
   name: string;
   children: Record<string, VFSNode>;
+  meta: VFSMetadata;
 }
 
 export type VFSNode = VFSFile | VFSDirectory;
@@ -18,6 +28,17 @@ export interface VFSState {
   root: VFSDirectory;
   cwd: string; // Absolute path, e.g., '/home/user'
 }
+
+export const createMetadata = (type: NodeType, permissions?: string): VFSMetadata => {
+  const now = Date.now();
+  return {
+    permissions: permissions || (type === 'dir' ? 'rwxr-xr-x' : 'rw-r--r--'),
+    owner: 'user',
+    group: 'user',
+    createdAt: now,
+    modifiedAt: now,
+  };
+};
 
 export const initialVFS: VFSState = {
   cwd: '/home/user',
@@ -32,11 +53,14 @@ export const initialVFS: VFSState = {
           'user': {
             type: 'dir',
             name: 'user',
-            children: {}
+            children: {},
+            meta: createMetadata('dir')
           }
-        }
+        },
+        meta: createMetadata('dir')
       }
-    }
+    },
+    meta: createMetadata('dir')
   }
 };
 

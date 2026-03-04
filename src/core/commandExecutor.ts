@@ -1,4 +1,4 @@
-import { VFSState, resolvePath, getNodeAtPath, VFSNode, VFSDirectory, VFSFile } from './vfs';
+import { VFSState, resolvePath, getNodeAtPath, VFSNode, VFSDirectory, VFSFile, createMetadata } from './vfs';
 import { commands } from '../data/commands';
 
 export interface CommandResult {
@@ -6,25 +6,64 @@ export interface CommandResult {
   newVfs: VFSState;
 }
 
+export const parseArgs = (cmdStr: string): string[] => {
+  const args: string[] = [];
+  let currentArg = '';
+  let inQuotes = false;
+  let quoteChar = '';
+
+  for (let i = 0; i < cmdStr.length; i++) {
+    const char = cmdStr[i];
+
+    if (inQuotes) {
+      if (char === quoteChar) {
+        inQuotes = false;
+      } else {
+        currentArg += char;
+      }
+    } else {
+      if (char === '"' || char === "'") {
+        inQuotes = true;
+        quoteChar = char;
+      } else if (/\s/.test(char)) {
+        if (currentArg.length > 0) {
+          args.push(currentArg);
+          currentArg = '';
+        }
+      } else {
+        currentArg += char;
+      }
+    }
+  }
+
+  if (currentArg.length > 0) {
+    args.push(currentArg);
+  }
+
+  return args;
+};
+
 export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => {
   let redirectTarget = '';
   let redirectAppend = false;
   let baseCmdStr = cmdStr;
 
-  const appendMatch = cmdStr.match(/(.*?)\s+>>\s+(\S+)$/);
+  const appendMatch = cmdStr.match(/(.*?)\s+>>\s+((?:["'].*?["'])|(?:\S+))$/);
   if (appendMatch) {
     baseCmdStr = appendMatch[1];
-    redirectTarget = appendMatch[2];
+    redirectTarget = appendMatch[2].replace(/^["'](.*)["']$/, '$1');
     redirectAppend = true;
   } else {
-    const writeMatch = cmdStr.match(/(.*?)\s+>\s+(\S+)$/);
+    const writeMatch = cmdStr.match(/(.*?)\s+>\s+((?:["'].*?["'])|(?:\S+))$/);
     if (writeMatch) {
       baseCmdStr = writeMatch[1];
-      redirectTarget = writeMatch[2];
+      redirectTarget = writeMatch[2].replace(/^["'](.*)["']$/, '$1');
     }
   }
 
-  const args = baseCmdStr.trim().split(/\s+/);
+  const args = parseArgs(baseCmdStr);
+  if (args.length === 0) return { output: '', newVfs: vfs };
+  
   const cmd = args[0];
   const newVfs = { ...vfs };
 
@@ -72,7 +111,12 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
           const child = node.children[name];
           const typeChar = child.type === 'dir' ? 'd' : '-';
           const size = child.type === 'file' ? child.content.length.toString().padStart(4) : '4096';
-          return `${typeChar}rw-r--r-- 1 user user ${size} Mar 03 10:00 ${name}`;
+          const perms = child.meta?.permissions || (child.type === 'dir' ? 'rwxr-xr-x' : 'rw-r--r--');
+          const owner = child.meta?.owner || 'user';
+          const group = child.meta?.group || 'user';
+          const date = new Date(child.meta?.modifiedAt || Date.now());
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          return `${typeChar}${perms} 1 ${owner} ${group} ${size} ${dateStr} ${name}`;
         }).join('\n');
       } else {
         output = childrenNames.join('  ');
@@ -112,7 +156,7 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       } else if (parentNode.children[dirName]) {
         output = `mkdir: cannot create directory '${args[1]}': File exists`;
       } else {
-        parentNode.children[dirName] = { type: 'dir', name: dirName, children: {} };
+        parentNode.children[dirName] = { type: 'dir', name: dirName, children: {}, meta: createMetadata('dir') };
       }
       break;
     }
@@ -145,7 +189,7 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
         break;
       }
       
-      const isRecursive = args.includes('-r') || args.includes('-rf');
+      const isRecursive = args.filter(a => a.startsWith('-')).some(o => o.includes('r'));
       if (parentNode.children[fileName].type === 'dir' && !isRecursive) {
         output = `rm: cannot remove '${targetArg}': Is a directory`;
         break;
@@ -170,7 +214,12 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       if (!parentNode || parentNode.type !== 'dir') {
         output = `touch: cannot touch '${args[1]}': No such file or directory`;
       } else if (!parentNode.children[fileName]) {
-        parentNode.children[fileName] = { type: 'file', name: fileName, content: '' };
+        parentNode.children[fileName] = { type: 'file', name: fileName, content: '', meta: createMetadata('file') };
+      } else {
+        // Update modifiedAt
+        if (parentNode.children[fileName].meta) {
+          parentNode.children[fileName].meta.modifiedAt = Date.now();
+        }
       }
       break;
     }
@@ -261,7 +310,7 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
     }
 
     case 'cp': {
-      const isRecursive = args.includes('-r');
+      const isRecursive = args.filter(a => a.startsWith('-')).some(o => o.includes('r'));
       const srcArg = args.find(a => !a.startsWith('-') && a !== 'cp');
       const destArg = args.find(a => !a.startsWith('-') && a !== 'cp' && a !== srcArg);
 
@@ -390,18 +439,51 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       break;
     }
 
-    case 'chmod':
-    case 'chown': {
+    case 'chmod': {
       if (!args[1] || !args[2]) {
-        output = `${cmd}: missing operand`;
+        output = `chmod: missing operand`;
         break;
       }
       const targetPath = resolvePath(vfs.cwd, args[2]);
       const node = getNodeAtPath(clonedVfs.root, targetPath);
       if (!node) {
-        output = `${cmd}: cannot access '${args[2]}': No such file or directory`;
+        output = `chmod: cannot access '${args[2]}': No such file or directory`;
       } else {
-        output = ''; // Silent success for simulation
+        if (node.meta) {
+          // Simple simulation of chmod +x
+          if (args[1] === '+x') {
+            const perms = node.meta.permissions;
+            node.meta.permissions = perms.substring(0, 3) + 'x' + perms.substring(4);
+          } else {
+            // Very basic simulation for other modes
+            node.meta.permissions = args[1];
+          }
+          node.meta.modifiedAt = Date.now();
+        }
+        output = '';
+      }
+      break;
+    }
+
+    case 'chown': {
+      if (!args[1] || !args[2]) {
+        output = `chown: missing operand`;
+        break;
+      }
+      const targetPath = resolvePath(vfs.cwd, args[2]);
+      const node = getNodeAtPath(clonedVfs.root, targetPath);
+      if (!node) {
+        output = `chown: cannot access '${args[2]}': No such file or directory`;
+      } else {
+        if (node.meta) {
+          const ownerGroup = args[1].split(':');
+          node.meta.owner = ownerGroup[0];
+          if (ownerGroup[1]) {
+            node.meta.group = ownerGroup[1];
+          }
+          node.meta.modifiedAt = Date.now();
+        }
+        output = '';
       }
       break;
     }
@@ -432,7 +514,7 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
         } else {
           const cwdNode = getNodeAtPath(clonedVfs.root, vfs.cwd);
           if (cwdNode && cwdNode.type === 'dir') {
-            cwdNode.children['.git'] = { type: 'dir', name: '.git', children: {} };
+            cwdNode.children['.git'] = { type: 'dir', name: '.git', children: {}, meta: createMetadata('dir') };
             output = `Initialized empty Git repository in ${vfs.cwd}/.git/`;
           }
         }
@@ -451,7 +533,12 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       } else if (args[1] === 'add') {
         output = ''; // Silent on success
       } else if (args[1] === 'commit') {
-        const message = args.slice(2).join(' ').replace(/^["'](.*)["']$/, '$1');
+        let message = '';
+        if (args[2] === '-m' && args[3]) {
+          message = args[3];
+        } else {
+          message = args.slice(2).join(' ').replace(/^["'](.*)["']$/, '$1');
+        }
         output = `[main (root-commit) a1b2c3d] ${message}\n 2 files changed, 2 insertions(+)`;
       } else if (args[1] === 'checkout') {
         if (args[2] === '-b') {
@@ -489,8 +576,9 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       if (!existingNode || existingNode.type === 'file') {
         if (existingNode && redirectAppend) {
           (existingNode as VFSFile).content += ((existingNode as VFSFile).content ? '\n' : '') + output;
+          if (existingNode.meta) existingNode.meta.modifiedAt = Date.now();
         } else {
-          parentNode.children[fileName] = { type: 'file', name: fileName, content: output };
+          parentNode.children[fileName] = { type: 'file', name: fileName, content: output, meta: createMetadata('file') };
         }
         output = ''; // Output is redirected, so nothing prints to terminal
       } else {

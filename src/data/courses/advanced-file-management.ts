@@ -1,5 +1,5 @@
 import { Course } from '../../core/types';
-import { getNodeAtPath } from '../../core/vfs';
+import { getNodeAtPath, createMetadata } from '../../core/vfs';
 
 export const advancedFileManagement: Course = {
   id: "advanced-file-management",
@@ -17,7 +17,7 @@ export const advancedFileManagement: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['config.json'] = { type: 'file', name: 'config.json', content: '{"port": 8080}' };
+          home.children['config.json'] = { type: 'file', name: 'config.json', content: '{"port": 8080}', meta: createMetadata('file') };
         }
         newVfs.cwd = '/home/user';
         return newVfs;
@@ -41,8 +41,9 @@ export const advancedFileManagement: Course = {
             type: 'dir', 
             name: 'src', 
             children: {
-              'main.js': { type: 'file', name: 'main.js', content: 'console.log("hello");' }
-            }
+              'main.js': { type: 'file', name: 'main.js', content: 'console.log("hello");', meta: createMetadata('file') }
+            },
+            meta: createMetadata('dir')
           };
         }
         return newVfs;
@@ -62,7 +63,7 @@ export const advancedFileManagement: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['OldName.txt'] = { type: 'file', name: 'OldName.txt', content: 'old content' };
+          home.children['OldName.txt'] = { type: 'file', name: 'OldName.txt', content: 'old content', meta: createMetadata('file') };
         }
         return newVfs;
       },
@@ -82,8 +83,8 @@ export const advancedFileManagement: Course = {
         const newVfs = JSON.parse(JSON.stringify(vfs));
         const home = getNodeAtPath(newVfs.root, '/home/user');
         if (home && home.type === 'dir') {
-          home.children['image.png'] = { type: 'file', name: 'image.png', content: 'binary_data' };
-          home.children['assets'] = { type: 'dir', name: 'assets', children: {} };
+          home.children['image.png'] = { type: 'file', name: 'image.png', content: 'binary_data', meta: createMetadata('file') };
+          home.children['assets'] = { type: 'dir', name: 'assets', children: {}, meta: createMetadata('dir') };
         }
         return newVfs;
       },

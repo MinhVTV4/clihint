@@ -294,7 +294,15 @@ export const TerminalApp = () => {
           <div className="flex items-start gap-2 relative mt-2">
             <span className="text-emerald-400 shrink-0 mt-0.5">➜</span>
             <span className="text-cyan-400 shrink-0 mt-0.5">{displayPath}</span>
-            <div className="relative flex-1">
+            <form 
+              className="relative flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // The onKeyDown handler already processes Enter, but this form wrapper
+                // ensures mobile keyboards show "Go"/"Enter" instead of "Next"
+                // and prevents default form submission behavior that might jump focus.
+              }}
+            >
               <div className="absolute inset-0 pointer-events-none text-transparent">
                 <SyntaxHighlighter command={input} />
               </div>
@@ -349,7 +357,7 @@ export const TerminalApp = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </form>
           </div>
         </div>
       </div>

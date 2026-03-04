@@ -6,6 +6,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { FileExplorer } from './FileExplorer';
+import { CommandReference } from './CommandReference';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -351,6 +352,14 @@ export const TerminalApp = () => {
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Right Panel: Command Reference */}
+      <div className={cn(
+        "flex-shrink-0 flex flex-col transition-all duration-300",
+        isFullscreen ? "w-0 opacity-0 overflow-hidden lg:w-0" : "hidden lg:flex w-full lg:w-80 opacity-100"
+      )}>
+        <CommandReference />
       </div>
     </div>
   );

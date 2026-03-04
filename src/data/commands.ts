@@ -100,6 +100,26 @@ export const commands: CommandDefinition[] = [
     ]
   },
   {
+    name: "ping",
+    description: "Kiểm tra kết nối mạng đến một địa chỉ IP hoặc tên miền"
+  },
+  {
+    name: "curl",
+    description: "Tải nội dung từ một URL (thường dùng cho API)"
+  },
+  {
+    name: "wget",
+    description: "Tải file từ internet về máy"
+  },
+  {
+    name: "apt",
+    description: "Trình quản lý gói của Ubuntu/Debian (cài đặt, cập nhật phần mềm)",
+    options: [
+      { name: "update", description: "Cập nhật danh sách các gói phần mềm" },
+      { name: "install", description: "Cài đặt một gói phần mềm mới" }
+    ]
+  },
+  {
     name: "ps",
     description: "Xem danh sách các tiến trình đang chạy",
     options: [

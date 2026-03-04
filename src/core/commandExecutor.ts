@@ -577,7 +577,65 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
       break;
     }
     
-      case 'git': {
+      case 'ping': {
+      if (!args[1]) {
+        output = 'ping: usage error: Destination address required';
+        break;
+      }
+      output = `PING ${args[1]} (192.168.1.1): 56 data bytes\n64 bytes from 192.168.1.1: icmp_seq=0 ttl=64 time=1.234 ms\n64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=1.102 ms\n64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=1.123 ms\n--- ${args[1]} ping statistics ---\n3 packets transmitted, 3 packets received, 0.0% packet loss`;
+      break;
+    }
+
+    case 'curl': {
+      if (!args[1]) {
+        output = 'curl: try \'curl --help\' for more information';
+        break;
+      }
+      if (args[1].includes('api.github.com')) {
+        output = '{\n  "login": "octocat",\n  "id": 1,\n  "type": "User"\n}';
+      } else {
+        output = `<html>\n  <body>\n    <h1>Welcome to ${args[1]}</h1>\n  </body>\n</html>`;
+      }
+      break;
+    }
+
+    case 'wget': {
+      if (!args[1]) {
+        output = 'wget: missing URL';
+        break;
+      }
+      const fileName = args[1].split('/').pop() || 'index.html';
+      const cwdNode = getNodeAtPath(clonedVfs.root, vfs.cwd);
+      if (cwdNode && cwdNode.type === 'dir') {
+        cwdNode.children[fileName] = { 
+          type: 'file', 
+          name: fileName, 
+          content: `Downloaded content from ${args[1]}`, 
+          meta: createMetadata('file') 
+        };
+        output = `Resolving ${args[1]}... 192.168.1.100\nConnecting to ${args[1]}|192.168.1.100|:443... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 1024 (1.0K) [text/html]\nSaving to: '${fileName}'\n\n     0K .                                                     100% 1.00M=0.001s\n\n2026-03-04 00:00:00 (1.00 MB/s) - '${fileName}' saved [1024/1024]`;
+      }
+      break;
+    }
+
+    case 'apt': {
+      if (args[1] === 'update') {
+        output = 'Hit:1 http://archive.ubuntu.com/ubuntu focal InRelease\nGet:2 http://archive.ubuntu.com/ubuntu focal-updates InRelease [114 kB]\nFetched 114 kB in 1s (114 kB/s)\nReading package lists... Done';
+      } else if (args[1] === 'install' && args[2]) {
+        if (!clonedVfs.installedPackages) clonedVfs.installedPackages = [];
+        if (clonedVfs.installedPackages.includes(args[2])) {
+          output = `${args[2]} is already the newest version.`;
+        } else {
+          clonedVfs.installedPackages.push(args[2]);
+          output = `Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed:\n  ${args[2]}\n0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.\nInst ${args[2]} (1.0.0 ubuntu1)\nConf ${args[2]} (1.0.0 ubuntu1)`;
+        }
+      } else {
+        output = 'apt: usage: apt [update|install package]';
+      }
+      break;
+    }
+
+    case 'git': {
       const gitDir = getNodeAtPath(clonedVfs.root, resolvePath(vfs.cwd, '.git'));
       
       if (args[1] === 'init') {
@@ -633,7 +691,17 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
     }
     
     default:
-      output = `bash: ${cmd}: command not found`;
+      if (clonedVfs.installedPackages?.includes(cmd)) {
+        if (cmd === 'htop') {
+          output = `htop 3.0.5 - (C) 2004-2020 Hisham Muhammad\n  1  [||||||||||||||||||||||||||||||||||||||||||||||||||||||||100.0%]\n  2  [||||||||||||||||||||||||||||||||||||||||||||||||||||||||100.0%]\n  Mem[|||||||||||||||||||||||||||||||||||||||||||||||||2.50G/8.00G]\n  Swp[                                                    0K/2.00G]\n\n  PID USER      PRI  NI  VIRT   RES   SHR S CPU% MEM%   TIME+  Command\n    1 root       20   0  166M  11M   8M S  0.0  0.1  0:01.23 /sbin/init\n   42 user       20   0  12M   4M   3M S  0.0  0.0  0:00.10 bash\n 9999 user       20   0  10M   2M   1M R 99.9  0.0 12:34.56 infinite_loop`;
+        } else if (cmd === 'neofetch') {
+          output = `       _,met$$$$$gg.          user@linux\n    ,g$$$$$$$$$$$$$$$P.       ----------\n  ,g$$P"     """Y$$.".        OS: Ubuntu 20.04 LTS x86_64\n ,$$P'              \`$$$.     Host: Virtual Machine\n',$$P       ,ggs.     \`$$b:   Kernel: 5.4.0-generic\n\`d$$'     ,$P"'   .    $$$    Uptime: 1 day, 2 hours\n $$P      d$'     ,    $$P    Packages: 1500 (dpkg)\n $$:      $$.   -    ,d$$'    Shell: bash 5.0.17\n $$;      Y$b._   _,d$P'      Terminal: Web Terminal\n Y$$.    \`.\`"Y$$$$P"'         CPU: Virtual CPU @ 2.40GHz\n \`$$b      "-.__              Memory: 2560MiB / 8192MiB\n  \`Y$$b\n   \`Y$$.                      \n     \`$$b.\n       \`Y$$b.\n          \`"Y$b._\n              \`""""`;
+        } else {
+          output = `Executing ${cmd}... (Simulated output for installed package)`;
+        }
+      } else {
+        output = `bash: ${cmd}: command not found`;
+      }
   }
 
   // Handle redirection

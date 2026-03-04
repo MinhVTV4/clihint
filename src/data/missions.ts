@@ -5,6 +5,8 @@ import { advancedFileManagement } from './courses/advanced-file-management';
 import { gitMastery } from './courses/git-mastery';
 import { linuxBasics } from './courses/linux-basics';
 import { processManagement } from './courses/process-management';
+import { networkingBasics } from './courses/networking-basics';
+import { packageManagement } from './courses/package-management';
 
 export const courses: Course[] = [
   bashBasics,
@@ -12,5 +14,7 @@ export const courses: Course[] = [
   fileManipulation,
   advancedFileManagement,
   processManagement,
+  networkingBasics,
+  packageManagement,
   gitMastery
 ];

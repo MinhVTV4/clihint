@@ -8,8 +8,10 @@ import { processManagement } from './courses/process-management';
 import { networkingBasics } from './courses/networking-basics';
 import { packageManagement } from './courses/package-management';
 import { ctfChallenge } from './courses/ctf-challenge';
+import { sandboxMode } from './courses/sandbox';
 
 export const courses: Course[] = [
+  sandboxMode,
   bashBasics,
   linuxBasics,
   fileManipulation,

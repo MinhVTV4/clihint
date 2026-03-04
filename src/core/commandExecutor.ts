@@ -189,8 +189,15 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
         break;
       }
       
+      const targetNode = parentNode.children[fileName];
+      const currentUser = clonedVfs.currentUser || 'user';
+      if (targetNode.meta && targetNode.meta.owner !== currentUser && currentUser !== 'root') {
+        output = `rm: cannot remove '${targetArg}': Permission denied`;
+        break;
+      }
+      
       const isRecursive = args.filter(a => a.startsWith('-')).some(o => o.includes('r'));
-      if (parentNode.children[fileName].type === 'dir' && !isRecursive) {
+      if (targetNode.type === 'dir' && !isRecursive) {
         output = `rm: cannot remove '${targetArg}': Is a directory`;
         break;
       }
@@ -227,6 +234,29 @@ export const executeCommand = (cmdStr: string, vfs: VFSState): CommandResult => 
     case 'echo': {
       const text = args.slice(1).join(' ').replace(/^["'](.*)["']$/, '$1');
       output = text;
+      break;
+    }
+
+    case 'su': {
+      if (!args[1]) {
+        output = 'su: user name required';
+        break;
+      }
+      const targetUser = args[1];
+      const password = args[2];
+      
+      if (targetUser === 'admin' && password === 'pwned2026') {
+        clonedVfs.currentUser = 'admin';
+        output = `Switched to user admin`;
+      } else if (targetUser === 'root' && password === 'root') {
+        clonedVfs.currentUser = 'root';
+        output = `Switched to user root`;
+      } else if (targetUser === 'user') {
+        clonedVfs.currentUser = 'user';
+        output = `Switched to user user`;
+      } else {
+        output = `su: Authentication failure`;
+      }
       break;
     }
 

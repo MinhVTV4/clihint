@@ -7,6 +7,7 @@ import { linuxBasics } from './courses/linux-basics';
 import { processManagement } from './courses/process-management';
 import { networkingBasics } from './courses/networking-basics';
 import { packageManagement } from './courses/package-management';
+import { ctfChallenge } from './courses/ctf-challenge';
 
 export const courses: Course[] = [
   bashBasics,
@@ -16,5 +17,6 @@ export const courses: Course[] = [
   processManagement,
   networkingBasics,
   packageManagement,
-  gitMastery
+  gitMastery,
+  ctfChallenge
 ];

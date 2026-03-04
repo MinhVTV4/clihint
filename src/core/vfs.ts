@@ -38,6 +38,7 @@ export interface VFSState {
   cwd: string; // Absolute path, e.g., '/home/user'
   processes?: Process[];
   installedPackages?: string[];
+  currentUser?: string;
 }
 
 export const createMetadata = (type: NodeType, permissions?: string): VFSMetadata => {
@@ -53,6 +54,7 @@ export const createMetadata = (type: NodeType, permissions?: string): VFSMetadat
 
 export const initialVFS: VFSState = {
   cwd: '/home/user',
+  currentUser: 'user',
   processes: [
     { pid: 1, user: 'root', command: '/sbin/init', cpu: 0.1, mem: 0.5, status: 'S' },
     { pid: 42, user: 'user', command: 'bash', cpu: 0.0, mem: 0.2, status: 'S' },

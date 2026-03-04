@@ -120,6 +120,10 @@ export const commands: CommandDefinition[] = [
     ]
   },
   {
+    name: "su",
+    description: "Chuyển đổi người dùng (Switch User)"
+  },
+  {
     name: "ps",
     description: "Xem danh sách các tiến trình đang chạy",
     options: [

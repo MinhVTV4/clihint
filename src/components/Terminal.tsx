@@ -231,7 +231,7 @@ export const TerminalApp = () => {
           </div>
           <div className="text-xs text-gray-500 font-medium flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
             <Command size={14} />
-            <span>user@hintshell:{displayPath}</span>
+            <span>{vfs.currentUser || 'user'}@hintshell:{displayPath}</span>
           </div>
           <div className="flex items-center gap-2">
             <button 
@@ -271,7 +271,7 @@ export const TerminalApp = () => {
               )}
               {line.type === 'input' && (
                 <div className="flex items-start gap-2">
-                  <span className="text-emerald-400 shrink-0">➜</span>
+                  <span className="text-emerald-400 shrink-0">{vfs.currentUser === 'admin' ? '#' : '➜'}</span>
                   <span className="text-cyan-400 shrink-0">{displayPath}</span>
                   <SyntaxHighlighter command={line.content} />
                 </div>
@@ -292,7 +292,7 @@ export const TerminalApp = () => {
 
           {/* Active Input Line */}
           <div className="flex items-start gap-2 relative mt-2">
-            <span className="text-emerald-400 shrink-0 mt-0.5">➜</span>
+            <span className="text-emerald-400 shrink-0 mt-0.5">{vfs.currentUser === 'admin' ? '#' : '➜'}</span>
             <span className="text-cyan-400 shrink-0 mt-0.5">{displayPath}</span>
             <form 
               className="relative flex-1"
